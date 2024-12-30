@@ -40,49 +40,20 @@ for /F "tokens=*" %%i in (roles.json) do (
     )
 )
 
-:: Pause to view the result
-pause
-:: Fetch members from the source server
-curl -X GET "https://discord.com/api/v9/guilds/%source_server_id%/members?limit=1000" -H "Authorization: Bot %token%" -H "Content-Type: application/json" -o members.json
+:: Fetch rules from the source server
+curl -X GET "https://discord.com/api/v9/guilds/%source_server_id%/rules" -H "Authorization: Bot %token%" -H "Content-Type: application/json" -o rules.json
 
-:: Read the members from the JSON file and add them to the target server
-for /F "tokens=*" %%i in (members.json) do (
-    set "line=%%i"
-    echo %line% | findstr /r /c:"\"user\": {\"id\": \"[^\"]*\"" >nul && (
-        for /F "tokens=2 delims=:" %%a in ("%line%") do (
-            set "member_id=%%a"
-            set "member_id=%member_id:~1,-1%"
-            curl -X PUT "https://discord.com/api/v9/guilds/%target_server_id%/members/%member_id%" -H "Authorization: Bot %token%" -H "Content-Type: application/json" -d "{}"
-        )
-    )
-)
-
-:: Fetch emojis from the source server
-curl -X GET "https://discord.com/api/v9/guilds/%source_server_id%/emojis" -H "Authorization: Bot %token%" -H "Content-Type: application/json" -o emojis.json
-
-:: Read the emojis from the JSON file and create them in the target server
-for /F "tokens=*" %%i in (emojis.json) do (
+:: Read the rules from the JSON file and create them in the target server
+for /F "tokens=*" %%i in (rules.json) do (
     set "line=%%i"
     echo %line% | findstr /r /c:"\"id\": \"[^\"]*\"" >nul && (
         for /F "tokens=2 delims=:" %%a in ("%line%") do (
-            set "emoji_id=%%a"
-            set "emoji_id=%emoji_id:~1,-1%"
-            curl -X POST "https://discord.com/api/v9/guilds/%target_server_id%/emojis" -H "Authorization: Bot %token%" -H "Content-Type: application/json" -d "{\"name\":\"%emoji_id%\"}"
+            set "rule_id=%%a"
+            set "rule_id=%rule_id:~1,-1%"
+            curl -X POST "https://discord.com/api/v9/guilds/%target_server_id%/rules" -H "Authorization: Bot %token%" -H "Content-Type: application/json" -d "{\"name\":\"%rule_id%\"}"
         )
     )
 )
 
-:: Fetch bots from the source server
-curl -X GET "https://discord.com/api/v9/guilds/%source_server_id%/members?limit=1000" -H "Authorization: Bot %token%" -H "Content-Type: application/json" -o bots.json
-
-:: Read the bots from the JSON file and add them to the target server
-for /F "tokens=*" %%i in (bots.json) do (
-    set "line=%%i"
-    echo %line% | findstr /r /c:"\"bot\": true" >nul && (
-        for /F "tokens=2 delims=:" %%a in ("%line%") do (
-            set "bot_id=%%a"
-            set "bot_id=%bot_id:~1,-1%"
-            curl -X PUT "https://discord.com/api/v9/guilds/%target_server_id%/members/%bot_id%" -H "Authorization: Bot %token%" -H "Content-Type: application/json" -d "{}"
-        )
-    )
-)
+:: Pause to view the result
+pause
